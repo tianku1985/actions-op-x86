@@ -1,4 +1,4 @@
-# Actions OpenWrt Snapshot
+﻿# Actions OpenWrt Snapshot
 [1]: https://img.shields.io/badge/license-GPLV2-brightgreen.svg
 [2]: /LICENSE
 [3]: https://img.shields.io/badge/PRs-welcome-brightgreen.svg
@@ -37,7 +37,9 @@
 + 无需专业知识,无需linux服务器,人人皆可通过云编译定制编译自己的专属固件.
 
 + 持续更新, 每周日零点定时自动云编译更新固件,不用再担心因停更而需更换固件.
-
+x86-64-generic-rootfs.tar.gz可解压固件,一般用于Docker或XLC等容器.
+uefi 	请确认您的设备是否支持EFI启动.
+vmdk 	EXSI专用, 解压后使用.
 
 | 设备           | 固件下载                                             | 说明                                 |
 |----------------|-----------------------------------------------------|--------------------------------------|
@@ -117,6 +119,7 @@ Build OpenWrt using GitHub Actions
 - click the `Star` button, and the build will starts automatically.Progress can be viewed on the Actions page.
 - When the build is complete, click the `Artifacts` button in the upper right corner of the Actions page to download the binaries.
 
+
 ### Acknowledgments
 - [OpenWrt](https://github.com/openwrt/openwrt)
 - [Lean's OpenWrt](https://github.com/coolsnowwolf/lede)
@@ -132,6 +135,8 @@ Build OpenWrt using GitHub Actions
 - [mxschmitt/action-tmate](https://github.com/mxschmitt/action-tmate)
 - [csexton/debugger-action](https://github.com/csexton/debugger-action)
 - [Cisco](https://www.cisco.com/)
+
+
 
 ![](https://github.com/garypang13/luci-theme-edge/raw/master/Screenshots/1.png)
 ![](https://github.com/garypang13/luci-theme-edge/raw/master/Screenshots/2.png)

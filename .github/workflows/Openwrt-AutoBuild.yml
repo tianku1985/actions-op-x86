@@ -41,6 +41,7 @@ jobs:
      
         echo "REPO_URL=${REPO_URL}" >> $GITHUB_ENV
         echo "REPO_BRANCH=${REPO_BRANCH}" >> $GITHUB_ENV
+        echo "REPO_VERSION=${REPO_VERSION}" >> $GITHUB_ENV
         echo "CONFIG_FILE=${CONFIG_FILE}" >> $GITHUB_ENV
         echo "DIY_SH=${DIY_SH}" >> $GITHUB_ENV
         echo "FREE_UP_DISK=${FREE_UP_DISK}" >> $GITHUB_ENV
@@ -75,30 +76,30 @@ jobs:
 
     - name: Clone source code
       run: |
-        git clone --depth 1 $REPO_URL -b $REPO_BRANCH openwrt
+       wget  $REPO_URL/v$REPO_VERSION.tar.gz
+           tar -xvf v$REPO_VERSION.tar.gz 
       
     - name: Free up disk space
       if: env.FREE_UP_DISK == 'true'
       env:
         DEBIAN_FRONTEND: noninteractive
       run: |
-        sudo mkdir -p -m 777 /mnt/openwrt/dl /mnt/openwrt/staging_dir
-        ln -sf /mnt/openwrt/dl openwrt/dl
-        ln -sf /mnt/openwrt/staging_dir openwrt/staging_dir
+        sudo mkdir -p -m 777 /mnt/openwrt-$REPO_VERSION/dl /mnt/openwrt-$REPO_VERSION/staging_dir
+        ln -sf /mnt/openwrt-$REPO_VERSION/dl openwrt-$REPO_VERSION/dl
+        ln -sf /mnt/openwrt-$REPO_VERSION/staging_dir openwrt-$REPO_VERSION/staging_dir
 
     - name: Load && Update feeds
       run: |
-        cp -rf devices/${{matrix.target}}/* openwrt/
+        cp -rf devices/${{matrix.target}}/* openwrt-$REPO_VERSION/
         git clone https://github.com/tianku1985/tianku-op-packages.git -b  master tianku
-        cp -rf tianku/* openwrt/package
+        cp -rf tianku/* openwrt-$REPO_VERSION/package
         
 
     - name: Load custom configuration
       run: |
-        cp -rf devices openwrt/
-        cd openwrt
-        
-         mv devices/${{matrix.target}}/feeds.conf.default   feeds.conf.default
+        cp -rf devices openwrt-$REPO_VERSION/
+        cd openwrt-$REPO_VERSION
+         
         ./scripts/feeds update -a && ./scripts/feeds install -a   
         
           chmod +x devices/${{matrix.target}}/$DIY_SH
@@ -113,7 +114,7 @@ jobs:
     - name: Download package
       id: package
       run: |
-        cd openwrt
+        cd openwrt-$REPO_VERSION
         make defconfig
         make download -j8
         find dl -size -1024c -exec ls -l {} \;
@@ -122,7 +123,7 @@ jobs:
     - name: Compile the firmware
       id: compile
       run: |
-        cd openwrt
+        cd openwrt-$REPO_VERSION
         echo -e "$(($(nproc)+1)) thread compile"
         make -j$(($(nproc)+1)) || make -j1 V=s
         echo "::set-output name=status::success"
@@ -132,25 +133,24 @@ jobs:
       if: env.UPLOAD_BIN_DIR_FOR_ARTIFACT == 'true'
       with:
         name: OpenWrt_bin_${{matrix.target}}
-        path: openwrt/bin
+        path: openwrt-$REPO_VERSION/bin
 
     - name: Organize files
       id: organize
       run: |
-        mkdir firmware && find openwrt/bin/targets/*/*/ -maxdepth 1 \
+        mkdir firmware && find openwrt-$REPO_VERSION/bin/targets/*/*/ -maxdepth 1 \
         -name "*Linux*" \
         -or -name "*feeds*" \
         -or -name "*config*" \
         -or -name "*sdk*" \
-        -or -name "*manifest" \
-        -or -name "*squashfs*" \
+        -or -name "openwrt*" \
         -or -name "sha256sums" \
         | xargs -i mv -f {} ./firmware/
-        cp openwrt/.config  ./firmware/${{matrix.target}}.config
+        cp openwrt-$REPO_VERSION/.config  ./firmware/${{matrix.target}}.config
         cd firmware
         echo ${{ env.date4 }} > version.txt
         mv sha256sums ${{matrix.target}}_sha256sums
-        rename -v "s/^openwrt/${{ env.date3 }}-openwrt/" * 
+        rename -v "s/^openwrt-$REPO_VERSION/${{ env.date3 }}-openwrt-$REPO_VERSION/" * 
         echo "FIRMWARE=$PWD" >> $GITHUB_ENV
         Emoji=("🎉" "🤞" "✨" "🎁" "🎈" "🎄" "🎨" "💋" "🍓" "🍕" "🍉" "💐" "🌴" "🚀" "🛸" "🗽" "⛅" "🌈" "🔥" "⛄" "🐶" "🏅" "🦄" "🐤")
         RANDOM=$$$(date +%s)
@@ -219,13 +219,13 @@ jobs:
       continue-on-error: true
       if: env.SCKEY
       run: |
-        [ steps.compile.outputs.status == 'success' ] && curl https://sc.ftqq.com/${{ secrets.SCKEY }}.send?text=🎉OpenWrt_${{ env.date3 }}_${{matrix.target}}编译完成😋|| curl https://sc.ftqq.com/${{ secrets.SCKEY }}.send?text=❌OpenWrt_${{ env.date3 }}_${{matrix.target}}编译失败😂
+        [ steps.compile.outputs.status == 'success' ] && curl https://sc.ftqq.com/${{ secrets.SCKEY }}.send?text=🎉openwrt-$REPO_VERSION_${{ env.date3 }}_${{matrix.target}}编译完成😋|| curl https://sc.ftqq.com/${{ secrets.SCKEY }}.send?text=❌openwrt-$REPO_VERSION_${{ env.date3 }}_${{matrix.target}}编译失败😂
 
     - name: Telegram notification
       if: env.TELEGRAM_TOKEN && ! contains(github.event.action, 'notg')
       continue-on-error: true
       run: |
-        # [ steps.compile.outputs.status == 'success' ] && curl -k --data chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" --data "text=🎉 OpenWrt ${{ env.date3 }} ${{matrix.target}} 编译成功 😋  https://op.supes.top/firmware/${{matrix.target}}/  ${{ env.COWURL }}   ${{ env.WETRANS }} 🚀" "https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendMessage" || curl -k --data chat_id="${{ secrets.TELEGRAM_TO }}" --data "text=❌ OpenWrt ${{ env.date3 }} ${{matrix.target}} 编译失败 😂" "https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendMessage"
+        # [ steps.compile.outputs.status == 'success' ] && curl -k --data chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" --data "text=🎉 openwrt-$REPO_VERSION ${{ env.date3 }} ${{matrix.target}} 编译成功 😋  https://op.supes.top/firmware/${{matrix.target}}/  ${{ env.COWURL }}   ${{ env.WETRANS }} 🚀" "https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendMessage" || curl -k --data chat_id="${{ secrets.TELEGRAM_TO }}" --data "text=❌ openwrt-$REPO_VERSION ${{ env.date3 }} ${{matrix.target}} 编译失败 😂" "https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendMessage"
 
     - name: Delete workflow runs
       uses: GitRML/delete-workflow-runs@main
