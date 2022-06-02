@@ -22,7 +22,7 @@
 <a href="https://t.me/opwrts" target="_blank">Telegram</a>
 ### 特色:
 
-
++https://github.com/Lienol/openwrt-package/tree/main/luci-app-ipsec-server
 +x86-64-generic-rootfs.tar.gz可解压固件,一般用于Docker或XLC等容器.
 +uefi 	请确认您的设备是否支持EFI启动.
 +vmdk 	EXSI专用, 解压后使用.
