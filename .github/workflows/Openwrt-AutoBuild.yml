@@ -23,7 +23,7 @@ env:
 
 jobs:
   build:
-    runs-on: Ubuntu-20.04
+    runs-on: Ubuntu-22.04
     
     name: Build ${{matrix.target}}
     strategy:
@@ -41,7 +41,6 @@ jobs:
      
         echo "REPO_URL=${REPO_URL}" >> $GITHUB_ENV
         echo "REPO_BRANCH=${REPO_BRANCH}" >> $GITHUB_ENV
-        echo "REPO_VERSION=${REPO_VERSION}" >> $GITHUB_ENV
         echo "CONFIG_FILE=${CONFIG_FILE}" >> $GITHUB_ENV
         echo "DIY_SH=${DIY_SH}" >> $GITHUB_ENV
         echo "FREE_UP_DISK=${FREE_UP_DISK}" >> $GITHUB_ENV
@@ -59,8 +58,7 @@ jobs:
       run: | 
         sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc
         sudo -E apt-get -qq update
-        sudo -E apt-get -qq install gzip tar build-essential gawk gcc-multilib flex git gettext libncurses5-dev libssl-dev python3-distutils zlib1g-dev 
-
+          sudo -E apt-get -qq install gzip tar build-essential gawk gcc-multilib flex git gettext libncurses5-dev libssl-dev python3-distutils zlib1g-dev 
         sudo -E apt-get -qq autoremove --purge
         sudo -E apt-get -qq clean
         sudo timedatectl set-timezone "$TZ"
@@ -76,32 +74,30 @@ jobs:
 
     - name: Clone source code
       run: |
-       wget  $REPO_URL/v$REPO_VERSION.tar.gz
-           tar -xvf v$REPO_VERSION.tar.gz 
+        git clone --depth 1 $REPO_URL -b $REPO_BRANCH openwrt
       
     - name: Free up disk space
       if: env.FREE_UP_DISK == 'true'
       env:
         DEBIAN_FRONTEND: noninteractive
       run: |
-        sudo mkdir -p -m 777 /mnt/openwrt-$REPO_VERSION/dl /mnt/openwrt-$REPO_VERSION/staging_dir
-        ln -sf /mnt/openwrt-$REPO_VERSION/dl openwrt-$REPO_VERSION/dl
-        ln -sf /mnt/openwrt-$REPO_VERSION/staging_dir openwrt-$REPO_VERSION/staging_dir
+        sudo mkdir -p -m 777 /mnt/openwrt/dl /mnt/openwrt/staging_dir
+        ln -sf /mnt/openwrt/dl openwrt/dl
+        ln -sf /mnt/openwrt/staging_dir openwrt/staging_dir
 
     - name: Load && Update feeds
       run: |
-        cp -rf devices/${{matrix.target}}/* openwrt-$REPO_VERSION/
+        cp -rf devices/${{matrix.target}}/* openwrt/
         git clone https://github.com/tianku1985/tianku-op-packages.git -b  master tianku
-        cp -rf tianku/* openwrt-$REPO_VERSION/package
+        cp -rf tianku/* openwrt/package
         
 
     - name: Load custom configuration
       run: |
-        cp -rf devices openwrt-$REPO_VERSION/
-        sudo mkdir -p -m 777 openwrt
-        ln -sf openwrt openwrt-$REPO_VERSION
-        cd openwrt-$REPO_VERSION
-         
+        cp -rf devices openwrt/
+        cd openwrt
+        
+         mv devices/${{matrix.target}}/feeds.conf.default   feeds.conf.default
         ./scripts/feeds update -a && ./scripts/feeds install -a   
         
           chmod +x devices/${{matrix.target}}/$DIY_SH
@@ -116,7 +112,7 @@ jobs:
     - name: Download package
       id: package
       run: |
-        cd openwrt-$REPO_VERSION
+        cd openwrt
         make defconfig
         make download -j8
         find dl -size -1024c -exec ls -l {} \;
@@ -125,12 +121,11 @@ jobs:
     - name: Compile the firmware
       id: compile
       run: |
-        cd openwrt-$REPO_VERSION
+        cd openwrt
         echo -e "$(($(nproc)+1)) thread compile"
         make -j$(($(nproc)+1)) || make -j1 V=s
         echo "::set-output name=status::success"
       
-       
     - name: Upload bin directory
       uses: actions/upload-artifact@main
       if: env.UPLOAD_BIN_DIR_FOR_ARTIFACT == 'true'
