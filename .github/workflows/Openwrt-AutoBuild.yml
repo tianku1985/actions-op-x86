@@ -97,7 +97,7 @@ jobs:
         cp -rf devices openwrt/
         cd openwrt
         
-         mv devices/${{matrix.target}}/feeds.conf.default   feeds.conf.default
+       #  mv devices/${{matrix.target}}/feeds.conf.default   feeds.conf.default
         ./scripts/feeds update -a && ./scripts/feeds install -a   
         
           chmod +x devices/${{matrix.target}}/$DIY_SH
