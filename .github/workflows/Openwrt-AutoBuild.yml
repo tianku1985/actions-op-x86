@@ -150,21 +150,13 @@ jobs:
       
       
       
-      
-        mkdir firmware && find openwrt/bin/targets/*/*/ -maxdepth 1 \
-        -name '*Linux*' \
-        -or -name '*feeds*' \
-        -or -name '*config*' \
-        -or -name '*sdk*' \
-        -or -name 'openwrt*' \
-        -or -name 'sha256sums' \ 
-        | xargs -i mv -f {} ./firmware/
+ 
         
         
         
       
         mkdir firmware 
-        cp -rf openwrt/bin/targets/*/*/*{combined,sysupgrade}* ./firmware/ || true
+        cp -rf openwrt/bin/targets/*/*/*{squashfs,sysupgrade}* ./firmware/ || true
          cp $GITHUB_WORKSPACE/openwrt/.config ./firmware/${{matrix.target}}.config || true
         cp $GITHUB_WORKSPACE/openwrt/build_dir/target-*/linux-*/linux-*/.config ./firmware/${{matrix.target}}_kernel.config || true
         
