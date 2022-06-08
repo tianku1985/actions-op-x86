@@ -25,17 +25,20 @@ jobs:
   build:
     runs-on: Ubuntu-20.04
     
-    name: Build ${{matrix.target}}
+    name:启动 ${{matrix.target}}编译
     strategy:
       fail-fast: false
       matrix:
-        target: ["${{ github.event.client_payload.target }}"]
+        #target: ["${{ github.event.client_payload.target }}"]
+        target: [x86_64,21-02]
+
+        # [Lede_source,Lienol_source,Mortal_source,Tianling_source,openwrt_amlogic]
         
     steps:
     - name: Checkout
       uses: actions/checkout@main
   
-    - name: Load Settings.ini
+    - name: 读取 Settings.ini设置
       run: |
        source "${GITHUB_WORKSPACE}/devices/${{matrix.target}}/settings.ini"
      
@@ -52,13 +55,13 @@ jobs:
 
 
 
-    - name: Initialization environment
+    - name: 部署编译环境
       env:
         DEBIAN_FRONTEND: noninteractive
       run: | 
         sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc
         sudo -E apt-get -qq update
-        sudo -E apt-get -qq install build-essential asciidoc binutils bzip2 gawk gettext git libncurses5-dev libz-dev patch python3 python2.7 unzip zlib1g-dev lib32gcc1 libc6-dev-i386 subversion flex uglifyjs gcc-multilib g++-multilib p7zip p7zip-full msmtp libssl-dev texinfo libglib2.0-dev xmlto qemu-utils upx libelf-dev autoconf automake libtool autopoint device-tree-compiler ccache xsltproc rename antlr3 gperf wget curl swig rsync
+        sudo -E apt-get -qq install gzip tar build-essential asciidoc binutils bzip2 gawk gettext git libncurses5-dev libz-dev patch python3 python2.7 unzip zlib1g-dev lib32gcc1 libc6-dev-i386 subversion flex uglifyjs gcc-multilib g++-multilib p7zip p7zip-full msmtp libssl-dev texinfo libglib2.0-dev xmlto qemu-utils upx libelf-dev autoconf automake libtool autopoint device-tree-compiler ccache xsltproc rename antlr3 gperf wget curl swig rsync
 
         sudo -E apt-get -qq autoremove --purge
         sudo -E apt-get -qq clean
@@ -73,9 +76,12 @@ jobs:
         echo "date3=$(date +'%m.%d')" >> $GITHUB_ENV
         echo "date4=$(date +'%m.%d.%Y')" >> $GITHUB_ENV
 
-    - name: Clone source code
+    - name: 下载openwrt发行版
       run: |
-        git clone --depth 1 $REPO_URL -b $REPO_BRANCH openwrt
+        #git clone --depth 1 $REPO_URL -b $REPO_BRANCH openwrt
+        wget https://github.com/openwrt/openwrt/archive/v21.02.3.tar.gz
+        tar -xvf v21.02.3.tar.gz
+        mv openwrt-21.02.3  openwrt
       
     - name: Free up disk space
       if: env.FREE_UP_DISK == 'true'
@@ -126,6 +132,8 @@ jobs:
         echo -e "$(($(nproc)+1)) thread compile"
         make -j$(($(nproc)+1)) || make -j1 V=s
         echo "::set-output name=status::success"
+    - name: 检查空间使用情况
+      run: df -hT
       
     - name: Upload bin directory
       uses: actions/upload-artifact@main
@@ -134,21 +142,26 @@ jobs:
         name: OpenWrt_bin_${{matrix.target}}
         path: openwrt/bin
 
-    - name: Organize files
+    - name: 复制文件Organize files
       id: organize
       run: |
+    
+      
+      
+      
+      
+      
         mkdir firmware && find openwrt/bin/targets/*/*/ -maxdepth 1 \
-        -name "*Linux*" \
-        -name "*Linux*" \
-        -or -name "*feeds*" \
-        -or -name "*config*" \
-        -or -name "*sdk*" \
-        -or -name "openwrt*" \
-        -or -name "sha256sums" \ 
+        -name '*Linux*' \
+        -or -name '*feeds*' \
+        -or -name '*config*' \
+        -or -name '*sdk*' \
+        -or -name 'openwrt*' \
+        -or -name 'sha256sums' \ 
         | xargs -i mv -f {} ./firmware/
         cp openwrt/.config  ./firmware/${{matrix.target}}.config
         cd firmware
-        echo ${{ env.date4 }} > version.txt
+        echo ${{ env.date4 }} _${{matrix.target}}> version.txt
         mv sha256sums ${{matrix.target}}_sha256sums
         rename -v "s/^openwrt/${{ env.date3 }}-openwrt/" * 
         echo "FIRMWARE=$PWD" >> $GITHUB_ENV
@@ -156,10 +169,9 @@ jobs:
         RANDOM=$$$(date +%s)
         rand=$[$RANDOM % ${#Emoji[@]}]
         echo "EMOJI=${Emoji[$rand]}" >> $GITHUB_ENV
-        if [ ${{matrix.target}} == "phicomm-k2p" ]; then
-        echo "NOTICE=刷机时breed里的闪存布局请选择斐讯而非默认的公版" >> $GITHUB_ENV
-        elif [ ${{matrix.target}} == "x86_64" ]; then
-        echo "NOTICE=请分配不少于800M的存储容量" >> $GITHUB_ENV
+        if [ ${{matrix.target}} == "x86_64" ]; then
+        echo "DOCKERTAG=${{ secrets.DOCKER_ID }}/openwrt-nginx:latest" >> $GITHUB_ENV
+        echo "NOTICE=请分配不少于1G的存储容量" >> $GITHUB_ENV
         fi
 
 
