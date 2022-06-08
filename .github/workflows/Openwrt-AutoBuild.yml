@@ -44,6 +44,7 @@ jobs:
      
         echo "REPO_URL=${REPO_URL}" >> $GITHUB_ENV
         echo "REPO_BRANCH=${REPO_BRANCH}" >> $GITHUB_ENV
+        echo "REPO_VER=${REPO_VER}" >> $GITHUB_ENV
         echo "CONFIG_FILE=${CONFIG_FILE}" >> $GITHUB_ENV
         echo "DIY_SH=${DIY_SH}" >> $GITHUB_ENV
         echo "FREE_UP_DISK=${FREE_UP_DISK}" >> $GITHUB_ENV
@@ -79,9 +80,9 @@ jobs:
     - name: 下载openwrt发行版
       run: |
         #git clone --depth 1 $REPO_URL -b $REPO_BRANCH openwrt
-        wget https://github.com/openwrt/openwrt/archive/v21.02.3.tar.gz
-        tar -xvf v21.02.3.tar.gz
-        mv openwrt-21.02.3  openwrt
+        wget $REPO_URL/v$REPO_VER.tar.gz
+        tar -xvf v$REPO_VER.tar.gz
+        mv openwrt-$REPO_VER  openwrt
       
     - name: Free up disk space
       if: env.FREE_UP_DISK == 'true'
@@ -156,7 +157,8 @@ jobs:
         
       
         mkdir firmware 
-        cp -rf openwrt/bin/targets/*/*/*{squashfs,sysupgrade}* ./firmware/ || true
+        cp -rf openwrt/bin/targets/*/*/*{openwrt}* ./firmware/ || true
+        cp -rf openwrt/bin/packages ./firmware/ || true
          cp $GITHUB_WORKSPACE/openwrt/.config ./firmware/${{matrix.target}}.config || true
         cp $GITHUB_WORKSPACE/openwrt/build_dir/target-*/linux-*/linux-*/.config ./firmware/${{matrix.target}}_kernel.config || true
         
@@ -164,7 +166,7 @@ jobs:
         cd firmware
         echo ${{ env.date4 }} _${{matrix.target}}> version.txt
       
-        rename -v "s/^openwrt/${{ env.date3 }}-openwrt/" * 
+        rename -v "s/^openwrt/${{ env.date3 }}-${REPO_VER}-openwrt/" * 
         echo "FIRMWARE=$PWD" >> $GITHUB_ENV
         Emoji=("🎉" "🤞" "✨" "🎁" "🎈" "🎄" "🎨" "💋" "🍓" "🍕" "🍉" "💐" "🌴" "🚀" "🛸" "🗽" "⛅" "🌈" "🔥" "⛄" "🐶" "🏅" "🦄" "🐤")
         RANDOM=$$$(date +%s)
