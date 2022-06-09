@@ -158,12 +158,12 @@ jobs:
          
          
          tar czvf ./firmware/packages_ipk.tar openwrt/bin/packages/ || true
-         cp $GITHUB_WORKSPACE/openwrt/.config ./firmware/${{matrix.target}}.config || true
-        cp $GITHUB_WORKSPACE/openwrt/build_dir/target-*/linux-*/linux-*/.config ./firmware/${{matrix.target}}_kernel.config || true
+         cp $GITHUB_WORKSPACE/openwrt/.config ./firmware/${{matrix.target}}_${{ env.REPO_VER }}.config || true
+        cp $GITHUB_WORKSPACE/openwrt/build_dir/target-*/linux-*/linux-*/.config ./firmware/${{matrix.target}}_${{ env.REPO_VER }}_kernel.config || true
         
-        cp openwrt/.config  ./firmware/${{matrix.target}}.config
+        cp openwrt/.config  ./firmware/${{matrix.target}}_${{ env.REPO_VER }}.config
         cd firmware
-        echo ${{ env.date4 }} _${{matrix.target}}> version.txt
+        echo ${{ env.date4 }} _${{matrix.target}}_${{ env.REPO_VER }}> version.txt
       
         rename -v "s/^openwrt/${{ env.date3 }}_${{ env.REPO_VER }}_openwrt/" * 
         echo "FIRMWARE=$PWD" >> $GITHUB_ENV
