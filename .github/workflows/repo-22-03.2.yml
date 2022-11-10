@@ -6,7 +6,7 @@
 # Blog: https://p3terx.com
 #=================================================
 
-name: Repo 22.03.1发行版测试
+name: Repo 22.03.2发行版测试
 
 on: 
   # push: 
@@ -18,8 +18,8 @@ on:
     inputs:
       ssh:
         description: 'SSH connection to Actions'
-        required: false
-        default: 'false'
+        required: true
+        default: 'true'
 
 env:
   REPO_TOKEN: ${{ secrets.REPO_TOKEN }}
@@ -39,7 +39,7 @@ jobs:
         -X POST https://api.github.com/repos/${{ github.actor }}/${{ github.event.repository.name }}/dispatches \
         -H "Accept: application/vnd.github.everest-preview+json" \
         -H "Authorization: token ${{ secrets.REPO_TOKEN }}" \
-        -d '{"event_type": "22.03.1_x86_64 ${{ env.SSH }}", "client_payload": {"target": "22.03.1"}}'
+        -d '{"event_type": "22.03.2_x86_64 ${{ env.SSH }}", "client_payload": {"target": "22.03.2"}}'
 
 
     - name: Delete workflow runs
