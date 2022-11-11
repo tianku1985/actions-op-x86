@@ -113,7 +113,7 @@ jobs:
         
          mv devices/${{matrix.target}}/$CONFIG_FILE   .config
          make defconfig
-         mv devices/${{matrix.target}}/config-5.10  target/linux/x86/config-5.10
+         mv devices/${{matrix.target}}/config-5.4  target/linux/x86/config-5.4
          make defconfig
         
 
@@ -136,7 +136,7 @@ jobs:
     - name: 检查空间使用情况
       run: df -hT
       
-    - name: Upload bin directory
+    - name: 上传bin文件夹(固件+ipk)在github空间
       uses: actions/upload-artifact@main
       if: env.UPLOAD_BIN_DIR_FOR_ARTIFACT == 'true'
       with:
