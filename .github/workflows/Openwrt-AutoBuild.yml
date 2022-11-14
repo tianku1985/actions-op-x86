@@ -96,8 +96,8 @@ jobs:
     - name: Load && Update feeds
       run: |
         cp -rf devices/${{matrix.target}}/* openwrt/
-        git clone https://github.com/tianku1985/tianku-op-packages.git -b  master tianku
-        cp -rf tianku/* openwrt/package
+        #git clone https://github.com/tianku1985/tianku-op-packages.git -b  master tianku
+        #cp -rf tianku/* openwrt/package
         
 
     - name: Load custom configuration
@@ -110,10 +110,10 @@ jobs:
         
           chmod +x devices/${{matrix.target}}/$DIY_SH
           /bin/bash "devices/${{matrix.target}}/$DIY_SH"
-        
+     
          mv devices/${{matrix.target}}/$CONFIG_FILE   .config
-         make defconfig
-         mv devices/${{matrix.target}}/config-5.10  target/linux/x86/config-5.10
+        
+         #mv devices/${{matrix.target}}/config-5.4  target/linux/x86/config-5.4
          make defconfig
         
 

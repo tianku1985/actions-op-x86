@@ -6,7 +6,7 @@
 # Blog: https://p3terx.com
 #=================================================
 
-name: Repo 21.02.5发行版
+name: Repo 21.02.3发行版
 
 on: 
   # push: 
@@ -39,7 +39,7 @@ jobs:
         -X POST https://api.github.com/repos/${{ github.actor }}/${{ github.event.repository.name }}/dispatches \
         -H "Accept: application/vnd.github.everest-preview+json" \
         -H "Authorization: token ${{ secrets.REPO_TOKEN }}" \
-        -d '{"event_type": "21.02.5_x86_64  ${{ env.SSH }}", "client_payload": {"target": "21.02.5"}}'
+        -d '{"event_type": "21.02.3_x86_64  ${{ env.SSH }}", "client_payload": {"target": "21.02.3"}}'
 
 
     - name: Delete workflow runs

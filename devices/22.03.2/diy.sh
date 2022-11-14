@@ -1,6 +1,9 @@
-#!/bin/bash
+﻿#!/bin/bash
 
+ mv devices/22.03.2/config-5.10  target/linux/x86/config-5.10
 
+#增加软件源
+echo "src-git tianku https://github.com/tianku1985/tianku-op-packages.git" >> feeds.conf.default
 
 # Modify default IP
 sed -i 's/192.168.1.1/10.0.0.1/g' package/base-files/files/bin/config_generate
