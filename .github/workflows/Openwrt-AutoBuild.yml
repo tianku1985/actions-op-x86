@@ -104,7 +104,8 @@ jobs:
       run: |
         cp -rf devices openwrt/
         cd openwrt
-        
+        #增加软件源
+         echo "src-git tianku https://github.com/tianku1985/tianku-op-packages.git" >> feeds.conf.default
          
         ./scripts/feeds update -a && ./scripts/feeds install -a   
         
