@@ -3,7 +3,7 @@
 
  
 # Modify default IP
-sed -i 's/192.168.1.1/10.0.0.1/g' package/base-files/files/bin/config_generate
+sed -i 's/192.168.1.1/192.168.124.1/g' package/base-files/files/bin/config_generate
 
  # 最大跟踪连接数
 sed -i 's/net.netfilter.nf_conntrack_max=16384/net.netfilter.nf_conntrack_max=65536/g'  package/kernel/linux/files/sysctl-nf-conntrack.conf
