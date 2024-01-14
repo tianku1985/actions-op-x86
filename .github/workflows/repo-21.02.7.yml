@@ -42,9 +42,5 @@ jobs:
         -d '{"event_type": "21.02.7_x86_64  ${{ env.SSH }}", "client_payload": {"target": "21.02.7"}}'
 
 
-    - name: Delete workflow runs
-      uses: GitRML/delete-workflow-runs@main
-      continue-on-error: true
-      with:
-        retain_days: 0
-        keep_minimum_runs: 0
+
+
